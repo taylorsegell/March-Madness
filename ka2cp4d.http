@@ -1,0 +1,114 @@
+### CP4D AUTHENTICATION
+### Call this API to authenticate against the IBM Cloud Pak for Data
+### and store the Access Token in an environment Variable
+
+# @name bearerTokenCP4D
+POST https://{{gateway}}/icp4d-api/v1/authorize 
+Content-Type:{{header_contentType}}
+
+{
+    "username": "{{cp4duser}}",
+    "password": "{{cp4dpassword}}"
+}
+
+### Storing the Access Token in a Variable
+@accessToken = {{bearerTokenCP4D.response.body.$.token}}
+
+### IMPORT ITEMS
+
+### Lists all KA available and their ids
+# @name getKA
+### Call this API to check what Knowledge Accelerators
+### content is available for import
+GET https://{{gateway}}/v1/knowledge_accelerators
+Content-Type: {{header_contentType}}
+Accept: {{header_accept}}
+Authorization: Bearer {{accessToken}}
+
+### List all ids for a specific Knowledge Accelerator industry
+# @name getKAContentID
+### Call this API to check what ids for a specific 
+### Knowledge Accelerator Industry
+@kaIndustry = kafs20
+
+GET https://{{gateway}}/v1/knowledge_accelerators/{{kaIndustry}}
+Content-Type: {{header_contentType}}
+Accept: {{header_accept}}
+Authorization: Bearer {{accessToken}}
+
+### Verify cluster is clean/has expected KA imports
+# @name getKAImportedItems
+### Call this API to check if any Knowledge Accelerators
+### content has already been imported or if the environment is clean
+GET https://{{gateway}}/v1/knowledge_accelerators/import_items
+Content-Type: {{header_contentType}}
+Accept: {{header_accept}}
+Authorization: Bearer {{accessToken}}
+
+### Run this to import 
+# @name postKAImportItems
+### Call this API to import
+### - Set one one of the following industry for the @kaIndustry variable
+###    @kaIndustry = kafs20
+###    @kaIndustry = kain20
+###    @kaIndustry = kaeu20
+###    @kaIndustry = kahc20
+###    @kaIndustry = kaci20
+### - Specify the content you want to import afer ?ids=
+### - Use do_import false first and switch to true then
+@kaIndustry = kain20
+POST https://{{gateway}}/v1/knowledge_accelerators/{{kaIndustry}}/import_items
+?ids={{kain_full}}
+&merge_option=empty
+&dependencies=mandatory
+&do_import=true
+Content-Type: {{header_contentType}}
+Accept: {{header_accept}}
+Authorization: Bearer {{accessToken}}
+
+### From the Response above, copy and paste the process_id
+### in the following variable 
+@importStatus=de7469af-fb3d-4276-9222-1a1793363b7f
+
+### Then call this API to check the import status
+GET https://{{gateway}}/v3/governance_artifact_types/import/status/{{importStatus}}
+Content-Type: {{header_contentType}}
+Accept: {{header_accept}}
+Authorization: Bearer {{accessToken}}
+
+### COPY ITEMS
+
+### Run this to copy a zip file into a CPD project
+# @name postKAImportItems
+### Call this API to copy the zip file containing the content you wish 
+### to subsequently import into WKC (using the UI)
+### - Set one one of the following industry for the @kaIndustry variable
+###    @kaIndustry = kafs20
+###    @kaIndustry = kain20
+###    @kaIndustry = kaeu20
+###    @kaIndustry = kahc20
+###    @kaIndustry = kaci20
+### - Specify the content you want to obtain the zip file of ?ids=
+### - Use do_import false first and switch to true then
+@kaIndustryCopy = kaci20
+@projectID = de7469af-fb3d-4276-9222-1a1793363b7f
+POST https://{{gateway}}/v1/knowledge_accelerators/{{kaIndustryCopy}}/copy_items
+?ids=personal-data
+&project_id={{projectID}}
+Content-Type: {{header_contentType}}
+Accept: {{header_accept}}
+Authorization: Bearer {{accessToken}}
+
+### MISC
+
+### KA Service Healthcheck (Version check)
+# @name kaHealthcheck
+GET http://{{gateway}}/v1/knowledge_accelerators/healthcheck
+
+### WKC Healthcheck (Version check)
+# @name wkcHealthcheck
+https://{{gateway}}/v3/glossary_terms/heartbeat
+
+
+
+GET https://{{{{gateway}}}/v1/knowledge_accelerators/import_items"}
